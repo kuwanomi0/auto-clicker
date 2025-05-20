@@ -16,14 +16,15 @@ positions = []
 
 def save_positions():
     with open(POSITIONS_FILE, "w") as f:
-        json.dump(positions, f)
+        json.dump([{"x": x, "y": y} for x, y in positions], f)
 
 
 def load_positions():
     if os.path.exists(POSITIONS_FILE):
         with open(POSITIONS_FILE, "r") as f:
             loaded = json.load(f)
-            positions.extend(tuple(pos) for pos in loaded)
+            positions.clear()
+            positions.extend((item["x"], item["y"]) for item in loaded)
 
 
 def export_positions():
@@ -34,7 +35,7 @@ def export_positions():
     )
     if filepath:
         with open(filepath, "w") as f:
-            json.dump(positions, f)
+            json.dump([{"x": x, "y": y} for x, y in positions], f)
         status_var.set(f"座標をエクスポートしました: {filepath}")
 
 
@@ -47,9 +48,9 @@ def import_positions():
             with open(filepath, "r") as f:
                 imported = json.load(f)
                 positions.clear()
-                positions.extend(tuple(pos) for pos in imported)
+                positions.extend((item["x"], item["y"]) for item in imported)
                 update_position_list()
-                save_positions()  # 自動保存用positions.jsonも上書き
+                save_positions()
                 status_var.set(f"座標をインポートしました: {filepath}")
         except Exception as e:
             status_var.set(f"インポート失敗: {e}")
