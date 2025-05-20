@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import filedialog
 import pyautogui
 import keyboard
 import threading
@@ -23,6 +24,35 @@ def load_positions():
         with open(POSITIONS_FILE, "r") as f:
             loaded = json.load(f)
             positions.extend(tuple(pos) for pos in loaded)
+
+
+def export_positions():
+    filepath = filedialog.asksaveasfilename(
+        defaultextension=".json",
+        filetypes=[("JSON files", "*.json")],
+        title="座標データをエクスポート",
+    )
+    if filepath:
+        with open(filepath, "w") as f:
+            json.dump(positions, f)
+        status_var.set(f"座標をエクスポートしました: {filepath}")
+
+
+def import_positions():
+    filepath = filedialog.askopenfilename(
+        filetypes=[("JSON files", "*.json")], title="座標データをインポート"
+    )
+    if filepath:
+        try:
+            with open(filepath, "r") as f:
+                imported = json.load(f)
+                positions.clear()
+                positions.extend(tuple(pos) for pos in imported)
+                update_position_list()
+                save_positions()  # 自動保存用positions.jsonも上書き
+                status_var.set(f"座標をインポートしました: {filepath}")
+        except Exception as e:
+            status_var.set(f"インポート失敗: {e}")
 
 
 def record_position():
@@ -116,18 +146,26 @@ listbox.grid(row=3, column=0, columnspan=2)
 btn_clear = tk.Button(root, text="座標を全て削除", command=clear_positions)
 btn_clear.grid(row=4, column=0, columnspan=2, pady=5)
 
+
+tk.Button(root, text="インポート", command=import_positions).grid(
+    row=5, column=0, pady=(5, 0)
+)
+tk.Button(root, text="エクスポート", command=export_positions).grid(
+    row=5, column=1, pady=(5, 0)
+)
+
 # クリック開始ボタン
 btn_start = tk.Button(root, text="クリック開始", command=start_clicking)
-btn_start.grid(row=5, column=0, columnspan=2, pady=10)
+btn_start.grid(row=6, column=0, columnspan=2, pady=10)
 
 # ステータス表示
 status_var = tk.StringVar()
 status_var.set("待機中...")
-tk.Label(root, textvariable=status_var, fg="blue").grid(row=6, column=0, columnspan=2)
+tk.Label(root, textvariable=status_var, fg="blue").grid(row=7, column=0, columnspan=2)
 
 # Escキーの注意表示（常時表示）
 tk.Label(root, text="※クリック中に Esc キーでキャンセル可能", fg="red").grid(
-    row=7, column=0, columnspan=2, pady=(5, 10)
+    row=8, column=0, columnspan=2, pady=(5, 10)
 )
 
 load_positions()
