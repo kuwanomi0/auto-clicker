@@ -21,10 +21,26 @@ def save_positions():
 
 def load_positions():
     if os.path.exists(POSITIONS_FILE):
-        with open(POSITIONS_FILE, "r") as f:
-            loaded = json.load(f)
-            positions.clear()
-            positions.extend((item["x"], item["y"]) for item in loaded)
+        try:
+            with open(POSITIONS_FILE, "r") as f:
+                loaded = json.load(f)
+                # 正しい形式でなければ例外にする
+                if not isinstance(loaded, list) or not all(
+                    isinstance(item, dict) and "x" in item and "y" in item
+                    for item in loaded
+                ):
+                    raise ValueError("不正なフォーマット")
+
+                positions.clear()
+                positions.extend((item["x"], item["y"]) for item in loaded)
+                return  # 成功したのでreturn
+        except Exception as e:
+            print(f"[警告] positions.json の読み込みに失敗しました: {e}")
+
+    # 失敗した場合 → 空の状態でpositions.jsonを上書き
+    positions.clear()
+    save_positions()
+    print("[情報] 初期状態でpositions.jsonを再作成しました")
 
 
 def export_positions():
