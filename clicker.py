@@ -4,9 +4,26 @@ import pyautogui
 import keyboard
 import threading
 import time
+import json
+import os
+
+POSITIONS_FILE = "positions.json"
 
 # 座標リスト
 positions = []
+
+
+def save_positions():
+    with open(POSITIONS_FILE, "w") as f:
+        json.dump(positions, f)
+
+
+def load_positions():
+    if os.path.exists(POSITIONS_FILE):
+        with open(POSITIONS_FILE, "r") as f:
+            loaded = json.load(f)
+            positions.extend(tuple(pos) for pos in loaded)
+
 
 def record_position():
     status_var.set("3秒以内に記録したい位置にマウスを移動してください...")
@@ -17,6 +34,7 @@ def record_position():
         x, y = pyautogui.position()
         positions.append((x, y))
         update_position_list()
+        save_positions()
         status_var.set(f"位置を記録しました: ({x}, {y})")
 
     threading.Thread(target=delayed_capture, daemon=True).start()
@@ -27,9 +45,13 @@ def update_position_list():
     for i, (x, y) in enumerate(positions, 1):
         listbox.insert(tk.END, f"{i}: ({x}, {y})")
 
+
 def clear_positions():
     positions.clear()
     update_position_list()
+    save_positions()
+    status_var.set("すべての位置を削除しました。")
+
 
 def start_clicking():
     try:
@@ -48,11 +70,11 @@ def start_clicking():
 
     def click_task():
         for i in range(1, count + 1):
-            if keyboard.is_pressed('esc'):
+            if keyboard.is_pressed("esc"):
                 status_var.set("キャンセルされました。")
                 break
             for x, y in positions:
-                if keyboard.is_pressed('esc'):
+                if keyboard.is_pressed("esc"):
                     status_var.set("キャンセルされました。")
                     btn_start.config(state="normal")
                     return
@@ -64,6 +86,7 @@ def start_clicking():
         btn_start.config(state="normal")
 
     threading.Thread(target=click_task, daemon=True).start()
+
 
 # GUI セットアップ
 root = tk.Tk()
@@ -103,6 +126,10 @@ status_var.set("待機中...")
 tk.Label(root, textvariable=status_var, fg="blue").grid(row=6, column=0, columnspan=2)
 
 # Escキーの注意表示（常時表示）
-tk.Label(root, text="※クリック中に Esc キーでキャンセル可能", fg="red").grid(row=7, column=0, columnspan=2, pady=(5, 10))
+tk.Label(root, text="※クリック中に Esc キーでキャンセル可能", fg="red").grid(
+    row=7, column=0, columnspan=2, pady=(5, 10)
+)
 
+load_positions()
+update_position_list()
 root.mainloop()
