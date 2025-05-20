@@ -59,17 +59,28 @@ def import_positions():
     filepath = filedialog.askopenfilename(
         filetypes=[("JSON files", "*.json")], title="座標データをインポート"
     )
-    if filepath:
-        try:
-            with open(filepath, "r") as f:
-                imported = json.load(f)
-                positions.clear()
-                positions.extend((item["x"], item["y"]) for item in imported)
-                update_position_list()
-                save_positions()
-                status_var.set(f"座標をインポートしました: {filepath}")
-        except Exception as e:
-            status_var.set(f"インポート失敗: {e}")
+    if not filepath:
+        return  # キャンセルされた
+
+    try:
+        with open(filepath, "r") as f:
+            imported = json.load(f)
+
+        # 構造チェック
+        if not isinstance(imported, list) or not all(
+            isinstance(item, dict) and "x" in item and "y" in item for item in imported
+        ):
+            raise ValueError("不正なフォーマット")
+
+        # 正常読み込み → positions更新＆保存
+        positions.clear()
+        positions.extend((item["x"], item["y"]) for item in imported)
+        update_position_list()
+        save_positions()
+        status_var.set(f"座標をインポートしました: {os.path.basename(filepath)}")
+
+    except Exception as e:
+        status_var.set(f"インポート失敗: {e}")
 
 
 def record_position():
