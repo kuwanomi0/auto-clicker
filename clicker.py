@@ -2,8 +2,34 @@ import tkinter as tk
 from tkinter import messagebox
 import pyautogui
 import keyboard
-import time
 import threading
+import time
+
+# 座標リスト
+positions = []
+
+def record_position():
+    status_var.set("3秒以内に記録したい位置にマウスを移動してください...")
+    root.update()
+
+    def delayed_capture():
+        time.sleep(3)
+        x, y = pyautogui.position()
+        positions.append((x, y))
+        update_position_list()
+        status_var.set(f"位置を記録しました: ({x}, {y})")
+
+    threading.Thread(target=delayed_capture, daemon=True).start()
+
+
+def update_position_list():
+    listbox.delete(0, tk.END)
+    for i, (x, y) in enumerate(positions, 1):
+        listbox.insert(tk.END, f"{i}: ({x}, {y})")
+
+def clear_positions():
+    positions.clear()
+    update_position_list()
 
 def start_clicking():
     try:
@@ -13,23 +39,27 @@ def start_clicking():
         messagebox.showerror("エラー", "回数とインターバルは数値で入力してください。")
         return
 
+    if not positions:
+        messagebox.showwarning("警告", "クリック位置が登録されていません。")
+        return
+
     btn_start.config(state="disabled")
-    status_var.set("5秒以内にマウスを目的の位置へ移動してください...")
-    root.update()
-    time.sleep(5)
-    x, y = pyautogui.position()
-    status_var.set(f"座標取得: ({x}, {y}) - クリック開始中（Escで中止）")
-    root.update()
+    status_var.set("クリック開始（Escでキャンセル）")
 
     def click_task():
         for i in range(1, count + 1):
             if keyboard.is_pressed('esc'):
                 status_var.set("キャンセルされました。")
                 break
-            pyautogui.click(x, y)
-            status_var.set(f"{i}/{count}回クリック完了")
-            root.update()
-            time.sleep(interval)
+            for x, y in positions:
+                if keyboard.is_pressed('esc'):
+                    status_var.set("キャンセルされました。")
+                    btn_start.config(state="normal")
+                    return
+                pyautogui.click(x, y)
+                status_var.set(f"{i}回目: ({x}, {y}) クリック完了")
+                root.update()
+                time.sleep(interval)
         status_var.set("クリック完了。")
         btn_start.config(state="normal")
 
@@ -37,24 +67,42 @@ def start_clicking():
 
 # GUI セットアップ
 root = tk.Tk()
-root.title("Auto Clicker (Windows GUI)")
+root.title("多点Auto Clicker")
 
-tk.Label(root, text="クリック回数：").grid(row=0, column=0, sticky="e")
+# クリック回数
+tk.Label(root, text="クリック回数:").grid(row=0, column=0, sticky="e")
 entry_count = tk.Entry(root)
 entry_count.insert(0, "10")
 entry_count.grid(row=0, column=1)
 
-tk.Label(root, text="インターバル（秒）：").grid(row=1, column=0, sticky="e")
+# インターバル
+tk.Label(root, text="インターバル（秒）:").grid(row=1, column=0, sticky="e")
 entry_interval = tk.Entry(root)
 entry_interval.insert(0, "1")
 entry_interval.grid(row=1, column=1)
 
-btn_start = tk.Button(root, text="開始", command=start_clicking)
-btn_start.grid(row=2, column=0, columnspan=2, pady=10)
+# 座標登録ボタン
+btn_record = tk.Button(root, text="現在のマウス位置を記録", command=record_position)
+btn_record.grid(row=2, column=0, columnspan=2, pady=5)
 
+# 座標一覧表示
+listbox = tk.Listbox(root, width=30)
+listbox.grid(row=3, column=0, columnspan=2)
+
+# 座標クリアボタン
+btn_clear = tk.Button(root, text="座標を全て削除", command=clear_positions)
+btn_clear.grid(row=4, column=0, columnspan=2, pady=5)
+
+# クリック開始ボタン
+btn_start = tk.Button(root, text="クリック開始", command=start_clicking)
+btn_start.grid(row=5, column=0, columnspan=2, pady=10)
+
+# ステータス表示
 status_var = tk.StringVar()
 status_var.set("待機中...")
-status_label = tk.Label(root, textvariable=status_var, fg="blue")
-status_label.grid(row=3, column=0, columnspan=2)
+tk.Label(root, textvariable=status_var, fg="blue").grid(row=6, column=0, columnspan=2)
+
+# Escキーの注意表示（常時表示）
+tk.Label(root, text="※クリック中に Esc キーでキャンセル可能", fg="red").grid(row=7, column=0, columnspan=2, pady=(5, 10))
 
 root.mainloop()
