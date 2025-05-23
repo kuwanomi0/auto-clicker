@@ -4,7 +4,7 @@ __pycache__/
 # アプリケーション固有
 data/
 auto_clicker.ini
-positions.json
+positions.csv
 
 # build関連
 build/

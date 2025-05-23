@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 from src.core.clicker import AutoClicker
 from src.utils.csv_handler import export_positions_to_csv, parse_csv_positions
-from src.utils.json_handler import save_positions, load_positions, export_positions_to_json
+from src.utils.json_handler import export_positions_to_json, load_positions
 from src.utils.config_handler import save_config, load_config
 
 class AutoClickerGUI:
@@ -169,11 +169,21 @@ class AutoClickerGUI:
         self.update_status("すべての位置を削除しました。")
 
     def save_positions(self):
-        save_positions(self.positions)
+        """座標データをCSVファイルに保存します。"""
+        export_positions_to_csv(self.positions, "positions.csv")
 
     def load_positions(self):
-        self.positions = load_positions()
-        self.update_position_list()
+        """CSVファイルから座標データを読み込みます。"""
+        try:
+            self.positions = parse_csv_positions("positions.csv")
+            self.update_position_list()
+        except Exception as e:
+            print(f"[警告] positions.csv の読み込みに失敗しました: {e}")
+            # エラー時は空のリストで初期化
+            self.positions = []
+            self.update_position_list()
+            # 空のファイルを作成
+            export_positions_to_csv([], "positions.csv")
 
     def import_positions(self):
         filepath = filedialog.askopenfilename(
