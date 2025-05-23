@@ -1,1 +1,1 @@
-pyinstaller --noconfirm --onefile --windowed clicker.py
+pyinstaller --noconfirm --onefile --windowed --name auto-clicker src/main.py

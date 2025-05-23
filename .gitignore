@@ -8,4 +8,4 @@ positions.json
 # build関連
 build/
 dist/
-clicker.spec
+auto-clicker.spec
