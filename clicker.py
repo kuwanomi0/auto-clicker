@@ -13,6 +13,28 @@ POSITIONS_FILE = "positions.json"
 # 座標リスト
 positions = []
 
+import csv
+
+
+def export_positions_csv():
+    filepath = filedialog.asksaveasfilename(
+        defaultextension=".csv",
+        filetypes=[("CSV files", "*.csv")],
+        title="CSVで座標データをエクスポート",
+    )
+    if not filepath:
+        return
+
+    try:
+        with open(filepath, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["x", "y"])
+            for x, y in positions:
+                writer.writerow([x, y])
+        status_var.set(f"エクスポート成功: {os.path.basename(filepath)}")
+    except Exception as e:
+        status_var.set(f"エクスポート失敗: {e}")
+
 
 def save_positions():
     with open(POSITIONS_FILE, "w") as f:
@@ -43,16 +65,21 @@ def load_positions():
     print("[情報] 初期状態でpositions.jsonを再作成しました")
 
 
-def export_positions():
+def export_positions_json():
     filepath = filedialog.asksaveasfilename(
         defaultextension=".json",
         filetypes=[("JSON files", "*.json")],
         title="座標データをエクスポート",
     )
-    if filepath:
+    if not filepath:
+        return
+
+    try:
         with open(filepath, "w") as f:
-            json.dump([{"x": x, "y": y} for x, y in positions], f)
-        status_var.set(f"座標をエクスポートしました: {filepath}")
+            json.dump([{"x": x, "y": y} for x, y in positions], f, indent=2)
+        status_var.set(f"エクスポート成功: {os.path.basename(filepath)}")
+    except Exception as e:
+        status_var.set(f"エクスポート失敗: {e}")
 
 
 def import_positions():
@@ -146,6 +173,18 @@ def start_clicking():
     threading.Thread(target=click_task, daemon=True).start()
 
 
+import tkinter as tk
+
+
+def toggle_advanced():
+    if advanced_frame.winfo_ismapped():
+        advanced_frame.grid_forget()
+        toggle_btn.config(text="▼ 出力オプションを表示")
+    else:
+        advanced_frame.grid(row=7, column=0, columnspan=2, padx=5, pady=5)
+        toggle_btn.config(text="▲ 出力オプションを隠す")
+
+
 # GUI セットアップ
 root = tk.Tk()
 root.title("多点Auto Clicker")
@@ -178,22 +217,33 @@ btn_clear.grid(row=4, column=0, columnspan=2, pady=5)
 tk.Button(root, text="インポート", command=import_positions).grid(
     row=5, column=0, pady=(5, 0)
 )
-tk.Button(root, text="エクスポート", command=export_positions).grid(
+tk.Button(root, text="エクスポート", command=export_positions_csv).grid(
     row=5, column=1, pady=(5, 0)
 )
 
+# 折りたたみボタン
+toggle_btn = tk.Button(root, text="▼ 出力オプションを表示", command=toggle_advanced)
+toggle_btn.grid(row=6, column=0, columnspan=2, pady=(5, 0))
+
+# 隠す用フレーム
+advanced_frame = tk.Frame(root)
+json_export_btn = tk.Button(
+    advanced_frame, text="JSONでエクスポート", command=export_positions_json
+)
+json_export_btn.pack(side="left", padx=5)
+
 # クリック開始ボタン
 btn_start = tk.Button(root, text="クリック開始", command=start_clicking)
-btn_start.grid(row=6, column=0, columnspan=2, pady=10)
+btn_start.grid(row=8, column=0, columnspan=2, pady=10)
 
 # ステータス表示
 status_var = tk.StringVar()
 status_var.set("待機中...")
-tk.Label(root, textvariable=status_var, fg="blue").grid(row=7, column=0, columnspan=2)
+tk.Label(root, textvariable=status_var, fg="blue").grid(row=9, column=0, columnspan=2)
 
 # Escキーの注意表示（常時表示）
 tk.Label(root, text="※クリック中に Esc キーでキャンセル可能", fg="red").grid(
-    row=8, column=0, columnspan=2, pady=(5, 10)
+    row=10, column=0, columnspan=2, pady=(5, 10)
 )
 
 load_positions()
