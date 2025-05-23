@@ -1,5 +1,11 @@
-build
-dist
+# Python関連
+__pycache__/
 
-clicker.spec
+# アプリケーション固有
+data/
 positions.json
+
+# build関連
+build/
+dist/
+clicker.spec
