@@ -7,6 +7,7 @@ from typing import List, Tuple
 from src.core.clicker import AutoClicker
 from src.utils.csv_handler import export_positions_to_csv, parse_csv_positions
 from src.utils.json_handler import save_positions, load_positions, export_positions_to_json
+from src.utils.config_handler import save_config, load_config
 
 class AutoClickerGUI:
     def __init__(self):
@@ -15,19 +16,68 @@ class AutoClickerGUI:
         self.positions: List[Tuple[int, int]] = []
         self.clicker = AutoClicker(self.update_status)
         self.setup_gui()
+        self.load_settings()
+
+    def validate_number(self, P):
+        """数字のみを許可するバリデーション関数"""
+        if P == "":
+            return True
+        try:
+            float(P)
+            return True
+        except ValueError:
+            return False
+
+    def adjust_value(self, entry, delta, is_count=True):
+        """値を増減させる"""
+        try:
+            current = float(entry.get())
+            if is_count:
+                # クリック回数は整数で、最小値は1
+                new_value = max(1, current + delta)
+                entry.delete(0, tk.END)
+                entry.insert(0, str(int(new_value)))
+            else:
+                # インターバルは小数点以下1桁まで、最小値は0.1
+                new_value = max(0.1, current + delta)
+                entry.delete(0, tk.END)
+                entry.insert(0, f"{new_value:.1f}")
+        except ValueError:
+            pass
+
+    def on_mousewheel(self, event, entry, is_count=True):
+        """マウススクロールで値を増減"""
+        delta = 1 if event.delta > 0 else -1
+        if not is_count:
+            delta *= 0.1
+        self.adjust_value(entry, delta, is_count)
+
+    def on_key_press(self, event, entry, is_count=True):
+        """キー入力で値を増減"""
+        if event.keysym == "Up":
+            delta = 1 if is_count else 0.1
+            self.adjust_value(entry, delta, is_count)
+        elif event.keysym == "Down":
+            delta = -1 if is_count else -0.1
+            self.adjust_value(entry, delta, is_count)
 
     def setup_gui(self):
+        # 数字のみを許可するバリデーション関数を登録
+        vcmd = (self.root.register(self.validate_number), '%P')
+
         # クリック回数
         tk.Label(self.root, text="クリック回数:").grid(row=0, column=0, sticky="e")
-        self.entry_count = tk.Entry(self.root)
-        self.entry_count.insert(0, "10")
+        self.entry_count = tk.Entry(self.root, validate='key', validatecommand=vcmd)
         self.entry_count.grid(row=0, column=1)
+        self.entry_count.bind("<MouseWheel>", lambda e: self.on_mousewheel(e, self.entry_count, True))
+        self.entry_count.bind("<Key>", lambda e: self.on_key_press(e, self.entry_count, True))
 
         # インターバル
         tk.Label(self.root, text="インターバル（秒）:").grid(row=1, column=0, sticky="e")
-        self.entry_interval = tk.Entry(self.root)
-        self.entry_interval.insert(0, "1")
+        self.entry_interval = tk.Entry(self.root, validate='key', validatecommand=vcmd)
         self.entry_interval.grid(row=1, column=1)
+        self.entry_interval.bind("<MouseWheel>", lambda e: self.on_mousewheel(e, self.entry_interval, False))
+        self.entry_interval.bind("<Key>", lambda e: self.on_key_press(e, self.entry_interval, False))
 
         # 座標登録ボタン
         self.btn_record = tk.Button(
@@ -187,6 +237,14 @@ class AutoClickerGUI:
             self.advanced_frame.grid(row=7, column=1, columnspan=2, padx=5, pady=5)
             self.toggle_label.config(text="▲ オプション")
 
+    def load_settings(self):
+        """設定を読み込みます。"""
+        clicks, interval = load_config()
+        self.entry_count.delete(0, tk.END)
+        self.entry_count.insert(0, str(clicks))
+        self.entry_interval.delete(0, tk.END)
+        self.entry_interval.insert(0, str(interval))
+
     def start_clicking(self):
         try:
             count = int(self.entry_count.get())
@@ -198,6 +256,9 @@ class AutoClickerGUI:
         if not self.positions:
             messagebox.showwarning("警告", "クリック位置が登録されていません。")
             return
+
+        # 設定を保存
+        save_config(count, interval)
 
         self.btn_start.config(state="disabled")
         self.update_status("クリック開始（Escでキャンセル）")
