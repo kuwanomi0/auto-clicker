@@ -4,6 +4,20 @@ Windows 11で画面上の座標を指定して繰り返しクリックさせる�
 
 ## 💻 ダウンロード方法
 
-最新バージョンの `clicker.exe` ファイルは [Releases](https://github.com/kuwanomi0/auto-clicker/releases) からダウンロードできます。
+最新バージョンの `auto-clicker.exe` ファイルは [Releases](https://github.com/kuwanomi0/auto-clicker/releases) からダウンロードできます。
 
-- Windows 11用: `clicker.exe`
+- Windows 11用: `auto-clicker.exe`
+
+## 📝 変更履歴
+
+### v1.1.0 (2025-05-24)
+
+- CSVファイル形式のサポート追加
+- 設定値（クリック回数、インターバル）の保持機能追加
+- 入力欄の操作性改善（数字のみ入力、マウススクロール、カーソルキーでの値の増減）
+
+### v1.0.0 (2025-05-21)
+
+- 初回リリース
+- 基本的なクリック機能
+- JSON形式での座標データの保存/読み込み

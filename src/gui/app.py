@@ -8,11 +8,12 @@ from src.core.clicker import AutoClicker
 from src.utils.csv_handler import export_positions_to_csv, parse_csv_positions
 from src.utils.json_handler import export_positions_to_json, load_positions
 from src.utils.config_handler import save_config, load_config
+from src.version import VERSION
 
 class AutoClickerGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("多点Auto Clicker")
+        self.root.title(f"Auto Clicker v{VERSION}")
         self.positions: List[Tuple[int, int]] = []
         self.clicker = AutoClicker(self.update_status)
         self.setup_gui()
