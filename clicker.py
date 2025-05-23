@@ -7,13 +7,12 @@ import threading
 import time
 import json
 import os
+import csv
 
 POSITIONS_FILE = "positions.json"
 
 # 座標リスト
 positions = []
-
-import csv
 
 
 def export_positions_csv():
@@ -82,26 +81,51 @@ def export_positions_json():
         status_var.set(f"エクスポート失敗: {e}")
 
 
+def parse_json_positions(filepath: str) -> list[tuple[int, int]]:
+    with open(filepath, "r") as f:
+        data = json.load(f)
+    if not isinstance(data, list) or not all(
+        isinstance(item, dict) and "x" in item and "y" in item for item in data
+    ):
+        raise ValueError("JSONファイルが不正なフォーマットです")
+    return [(int(item["x"]), int(item["y"])) for item in data]
+
+
+def parse_csv_positions(filepath: str) -> list[tuple[int, int]]:
+    with open(filepath, "r", newline="") as f:
+        reader = csv.reader(f)
+        header = next(reader, None)
+        if (
+            header is None
+            or len(header) < 2
+            or header[0].lower() != "x"
+            or header[1].lower() != "y"
+        ):
+            raise ValueError("CSVファイルのヘッダーが不正です（x,yが必要）")
+        return [
+            (int(float(row[0])), int(float(row[1]))) for row in reader if len(row) >= 2
+        ]
+
+
 def import_positions():
     filepath = filedialog.askopenfilename(
-        filetypes=[("JSON files", "*.json")], title="座標データをインポート"
+        filetypes=[("JSON or CSV files", "*.json *.csv")],
+        title="座標データをインポート",
     )
     if not filepath:
-        return  # キャンセルされた
+        return
 
     try:
-        with open(filepath, "r") as f:
-            imported = json.load(f)
+        ext = os.path.splitext(filepath)[1].lower()
+        if ext == ".json":
+            imported = parse_json_positions(filepath)
+        elif ext == ".csv":
+            imported = parse_csv_positions(filepath)
+        else:
+            raise ValueError("サポートされていないファイル形式です")
 
-        # 構造チェック
-        if not isinstance(imported, list) or not all(
-            isinstance(item, dict) and "x" in item and "y" in item for item in imported
-        ):
-            raise ValueError("不正なフォーマット")
-
-        # 正常読み込み → positions更新＆保存
         positions.clear()
-        positions.extend((item["x"], item["y"]) for item in imported)
+        positions.extend(imported)
         update_position_list()
         save_positions()
         status_var.set(f"座標をインポートしました: {os.path.basename(filepath)}")
@@ -179,10 +203,10 @@ import tkinter as tk
 def toggle_advanced():
     if advanced_frame.winfo_ismapped():
         advanced_frame.grid_forget()
-        toggle_btn.config(text="▼ 出力オプションを表示")
+        toggle_label.config(text="▼ オプション")
     else:
-        advanced_frame.grid(row=7, column=0, columnspan=2, padx=5, pady=5)
-        toggle_btn.config(text="▲ 出力オプションを隠す")
+        advanced_frame.grid(row=7, column=1, columnspan=2, padx=5, pady=5)
+        toggle_label.config(text="▲ オプション")
 
 
 # GUI セットアップ
@@ -222,8 +246,14 @@ tk.Button(root, text="エクスポート", command=export_positions_csv).grid(
 )
 
 # 折りたたみボタン
-toggle_btn = tk.Button(root, text="▼ 出力オプションを表示", command=toggle_advanced)
-toggle_btn.grid(row=6, column=0, columnspan=2, pady=(5, 0))
+toggle_label = tk.Label(
+    root,
+    text="▼ オプション",
+    font=("TkDefaultFont", 9),
+    cursor="hand2",
+)
+toggle_label.bind("<Button-1>", lambda e: toggle_advanced())
+toggle_label.grid(row=6, column=1, columnspan=2, pady=(5, 0))
 
 # 隠す用フレーム
 advanced_frame = tk.Frame(root)
