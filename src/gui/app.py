@@ -78,7 +78,7 @@ class AutoClickerGUI:
         self.entry_count.bind("<Key>", lambda e: self.on_key_press(e, self.entry_count, True))
 
         # インターバル
-        tk.Label(self.root, text="インターバル（秒）:").grid(row=1, column=0, sticky="e")
+        tk.Label(self.root, text="間隔（秒）:").grid(row=1, column=0, sticky="e")
         self.entry_interval = tk.Entry(self.root, validate='key', validatecommand=vcmd)
         self.entry_interval.grid(row=1, column=1)
         self.entry_interval.bind("<MouseWheel>", lambda e: self.on_mousewheel(e, self.entry_interval, False))
@@ -131,7 +131,7 @@ class AutoClickerGUI:
         self.advanced_frame = tk.Frame(self.root)
         self.json_export_btn = tk.Button(
             self.advanced_frame,
-            text="JSONでエクスポート",
+            text="JSONエクスポート",
             command=self.export_positions_json
         )
         self.json_export_btn.pack(side="left", padx=5)
