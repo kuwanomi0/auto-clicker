@@ -66,6 +66,9 @@ class AutoClickerGUI:
         # 数字のみを許可するバリデーション関数を登録
         vcmd = (self.root.register(self.validate_number), '%P')
 
+        # スペースキーのイベントハンドラを登録
+        self.root.bind("<space>", lambda e: self.record_position_immediate())
+
         # クリック回数
         tk.Label(self.root, text="クリック回数:").grid(row=0, column=0, sticky="e")
         self.entry_count = tk.Entry(self.root, validate='key', validatecommand=vcmd)
@@ -157,6 +160,14 @@ class AutoClickerGUI:
             self.update_status(f"位置を記録しました: ({x}, {y})")
 
         threading.Thread(target=delayed_capture, daemon=True).start()
+
+    def record_position_immediate(self):
+        """スペースキーが押されたときに即座にマウス位置を記録します。"""
+        x, y = self.clicker.get_current_position()
+        self.positions.append((x, y))
+        self.update_position_list()
+        self.save_positions()
+        self.update_status(f"位置を記録しました: ({x}, {y})")
 
     def update_position_list(self):
         self.listbox.delete(0, tk.END)
