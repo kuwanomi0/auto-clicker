@@ -289,6 +289,15 @@ class AutoClickerGUI:
             messagebox.showwarning("警告", "クリック位置が登録されていません。")
             return
 
+        # 座標登録モードがオンの場合はオフにする
+        if self.recording_mode:
+            self.recording_mode = False
+            self.btn_recording_mode.config(
+                text="座標登録モード: オフ",
+                bg='SystemButtonFace'
+            )
+            self.update_status("座標登録モードを無効にしました")
+
         # 設定を保存
         save_config(count, interval)
 
