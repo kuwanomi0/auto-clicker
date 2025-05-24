@@ -16,6 +16,7 @@ class AutoClickerGUI:
         self.root.title(f"Auto Clicker v{VERSION}")
         self.positions: List[Tuple[int, int]] = []
         self.clicker = AutoClicker(self.update_status)
+        self.recording_mode = False  # 座標登録モードの状態
         self.setup_gui()
         self.load_settings()
 
@@ -83,28 +84,36 @@ class AutoClickerGUI:
         self.entry_interval.bind("<MouseWheel>", lambda e: self.on_mousewheel(e, self.entry_interval, False))
         self.entry_interval.bind("<Key>", lambda e: self.on_key_press(e, self.entry_interval, False))
 
+        # 座標登録モードボタン
+        self.btn_recording_mode = tk.Button(
+            self.root,
+            text="座標登録モード: オフ",
+            command=self.toggle_recording_mode
+        )
+        self.btn_recording_mode.grid(row=2, column=0, columnspan=2, pady=5)
+
         # 座標登録ボタン
         self.btn_record = tk.Button(
             self.root, text="現在のマウス位置を記録", command=self.record_position
         )
-        self.btn_record.grid(row=2, column=0, columnspan=2, pady=5)
+        self.btn_record.grid(row=3, column=0, columnspan=2, pady=5)
 
         # 座標一覧表示
         self.listbox = tk.Listbox(self.root, width=30)
-        self.listbox.grid(row=3, column=0, columnspan=2)
+        self.listbox.grid(row=4, column=0, columnspan=2)
 
         # 座標クリアボタン
         self.btn_clear = tk.Button(
             self.root, text="座標を全て削除", command=self.clear_positions
         )
-        self.btn_clear.grid(row=4, column=0, columnspan=2, pady=5)
+        self.btn_clear.grid(row=5, column=0, columnspan=2, pady=5)
 
         # インポート/エクスポートボタン
         tk.Button(self.root, text="インポート", command=self.import_positions).grid(
-            row=5, column=0, pady=(5, 0)
+            row=6, column=0, pady=(5, 0)
         )
         tk.Button(self.root, text="CSVエクスポート", command=self.export_positions_csv).grid(
-            row=5, column=1, pady=(5, 0)
+            row=6, column=1, pady=(5, 0)
         )
 
         # オプション
@@ -115,7 +124,7 @@ class AutoClickerGUI:
             cursor="hand2",
         )
         self.toggle_label.bind("<Button-1>", lambda e: self.toggle_advanced())
-        self.toggle_label.grid(row=6, column=1, columnspan=2, pady=(5, 0))
+        self.toggle_label.grid(row=7, column=1, columnspan=2, pady=(5, 0))
 
         # 隠す用フレーム
         self.advanced_frame = tk.Frame(self.root)
@@ -128,13 +137,13 @@ class AutoClickerGUI:
 
         # クリック開始ボタン
         self.btn_start = tk.Button(self.root, text="クリック開始", command=self.start_clicking)
-        self.btn_start.grid(row=8, column=0, columnspan=2, pady=10)
+        self.btn_start.grid(row=9, column=0, columnspan=2, pady=10)
 
         # ステータス表示
         self.status_var = tk.StringVar()
         self.status_var.set("待機中...")
         tk.Label(self.root, textvariable=self.status_var, fg="blue").grid(
-            row=9, column=0, columnspan=2
+            row=10, column=0, columnspan=2
         )
 
         # Escキーの注意表示
@@ -142,7 +151,7 @@ class AutoClickerGUI:
             self.root,
             text="※クリック中に Esc キーでキャンセル可能",
             fg="red"
-        ).grid(row=10, column=0, columnspan=2, pady=(5, 10))
+        ).grid(row=11, column=0, columnspan=2, pady=(5, 10))
 
     def update_status(self, message: str):
         self.status_var.set(message)
@@ -163,6 +172,8 @@ class AutoClickerGUI:
 
     def record_position_immediate(self):
         """スペースキーが押されたときに即座にマウス位置を記録します。"""
+        if not self.recording_mode:
+            return
         x, y = self.clicker.get_current_position()
         self.positions.append((x, y))
         self.update_position_list()
@@ -256,8 +267,19 @@ class AutoClickerGUI:
             self.advanced_frame.grid_forget()
             self.toggle_label.config(text="▼ オプション")
         else:
-            self.advanced_frame.grid(row=7, column=1, columnspan=2, padx=5, pady=5)
+            self.advanced_frame.grid(row=8, column=1, columnspan=2, padx=5, pady=5)
             self.toggle_label.config(text="▲ オプション")
+
+    def toggle_recording_mode(self):
+        """座標登録モードを切り替えます。"""
+        self.recording_mode = not self.recording_mode
+        self.btn_recording_mode.config(
+            text=f"座標登録モード: {'オン' if self.recording_mode else 'オフ'}",
+            bg='#ffcccc' if self.recording_mode else 'SystemButtonFace'  # オン時は赤色、オフ時は通常の色
+        )
+        self.update_status(
+            "座標登録モードが" + ("有効" if self.recording_mode else "無効") + "になりました"
+        )
 
     def load_settings(self):
         """設定を読み込みます。"""
