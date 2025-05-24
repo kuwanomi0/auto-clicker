@@ -92,11 +92,12 @@ class AutoClickerGUI:
         )
         self.btn_recording_mode.grid(row=2, column=0, columnspan=2, pady=5)
 
-        # 座標登録ボタン
-        self.btn_record = tk.Button(
-            self.root, text="現在のマウス位置を記録", command=self.record_position
-        )
-        self.btn_record.grid(row=3, column=0, columnspan=2, pady=5)
+        # 座標登録モードの説明
+        tk.Label(
+            self.root,
+            text="※座標登録モードをオンにして\nスペースキーで座標を追加できます",
+            fg="gray"
+        ).grid(row=3, column=0, columnspan=2, pady=(0, 5))
 
         # 座標一覧表示
         self.listbox = tk.Listbox(self.root, width=30)
@@ -156,19 +157,6 @@ class AutoClickerGUI:
     def update_status(self, message: str):
         self.status_var.set(message)
         self.root.update()
-
-    def record_position(self):
-        self.update_status("3秒以内に記録したい位置にマウスを移動してください...")
-        
-        def delayed_capture():
-            time.sleep(3)
-            x, y = self.clicker.get_current_position()
-            self.positions.append((x, y))
-            self.update_position_list()
-            self.save_positions()
-            self.update_status(f"位置を記録しました: ({x}, {y})")
-
-        threading.Thread(target=delayed_capture, daemon=True).start()
 
     def record_position_immediate(self):
         """スペースキーが押されたときに即座にマウス位置を記録します。"""
