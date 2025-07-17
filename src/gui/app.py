@@ -301,11 +301,26 @@ class AutoClickerGUI:
         # 設定を保存
         save_config(count, interval)
 
-        self.btn_start.config(state="disabled")
         self.update_status("クリック開始（Escでキャンセル）")
 
         def on_complete():
-            self.btn_start.config(state="normal")
+            self.btn_start.config(
+                text="クリック開始",
+                command=self.start_clicking
+            )
+
+        def cancel_clicking():
+            self.clicker._should_cancel = True
+            self.btn_start.config(
+                text="クリック開始",
+                command=self.start_clicking
+            )
+
+        # ボタンをキャンセルボタンに変更
+        self.btn_start.config(
+            text="キャンセル",
+            command=cancel_clicking
+        )
 
         threading.Thread(
             target=lambda: self.clicker.click_positions(
