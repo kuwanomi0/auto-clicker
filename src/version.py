@@ -1,6 +1,6 @@
 """
 バージョン情報
 """
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 AUTHOR = "kuwanomi0"
 DESCRIPTION = "Windows 11で画面上の座標を指定して繰り返しクリックさせるアプリ" 
