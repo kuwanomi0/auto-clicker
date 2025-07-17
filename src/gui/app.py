@@ -171,7 +171,34 @@ class AutoClickerGUI:
     def update_position_list(self):
         self.listbox.delete(0, tk.END)
         for i, (x, y) in enumerate(self.positions, 1):
-            self.listbox.insert(tk.END, f"{i}: ({x}, {y})")
+            self.listbox.insert(tk.END, f"[×] {i}: ({x}, {y})")
+
+        # クリックイベントのバインド
+        self.listbox.bind('<Button-1>', self.on_listbox_click)
+
+    def on_listbox_click(self, event):
+        """リストボックスのクリックイベントを処理します"""
+        # クリックされた位置のインデックスを取得
+        clicked_index = self.listbox.nearest(event.y)
+        if clicked_index < 0 or clicked_index >= len(self.positions):
+            return
+
+        # クリックされた位置のテキストを取得
+        clicked_text = self.listbox.get(clicked_index)
+        
+        # クリック位置を計算（[×]ボタンの範囲内かチェック）
+        item_x = event.x
+        if 0 <= item_x <= 20:  # [×]ボタンの範囲
+            self.delete_position(clicked_index)
+
+    def delete_position(self, index):
+        """指定されたインデックスの座標を削除します"""
+        if 0 <= index < len(self.positions):
+            x, y = self.positions[index]
+            del self.positions[index]
+            self.update_position_list()
+            self.save_positions()
+            self.update_status(f"座標 ({x}, {y}) を削除しました")
 
     def clear_positions(self):
         self.positions.clear()
