@@ -1,12 +1,14 @@
 import pyautogui
 import keyboard
 import time
+import threading
 from typing import List, Tuple, Callable
 
 class AutoClicker:
     def __init__(self, status_callback: Callable[[str], None] = None):
         self.status_callback = status_callback or (lambda x: None)
         self._is_running = False
+        self._should_cancel = False
 
     def click_positions(
         self,
@@ -17,15 +19,26 @@ class AutoClicker:
     ) -> None:
         """指定された位置を指定回数クリックします。"""
         self._is_running = True
+        self._should_cancel = False
+
+        def check_esc():
+            while self._is_running:
+                if keyboard.is_pressed("esc"):
+                    self._should_cancel = True
+                    self.status_callback("キャンセルされました。")
+                    break
+                time.sleep(0.1)
+
+        cancel_thread = threading.Thread(target=check_esc, daemon=True)
+        cancel_thread.start()
+
         try:
             for i in range(1, count + 1):
-                if keyboard.is_pressed("esc"):
-                    self.status_callback("キャンセルされました。")
+                if self._should_cancel:
                     break
 
                 for x, y in positions:
-                    if keyboard.is_pressed("esc"):
-                        self.status_callback("キャンセルされました。")
+                    if self._should_cancel:
                         return
                     pyautogui.click(x, y)
                     self.status_callback(f"{i}回目: ({x}, {y}) クリック完了")
