@@ -10,6 +10,14 @@ Windows 11で画面上の座標を指定して繰り返しクリックさせる�
 
 ## 📝 変更履歴
 
+### v1.3.1 (2026-06-03)
+
+- 開発環境の整備
+  - パッケージ管理を `requirements.txt` から Poetry に移行
+  - `run.bat` / `build.bat` を `poetry run` 対応に更新
+  - VSCode 設定ファイルを追加（launch.json, extensions.json, settings.json, cspell.json）
+  - 開発ドキュメント（docs/DEVELOPMENT.md）を追加
+
 ### v1.3.0 (2025-07-18)
 
 - 操作性の改善

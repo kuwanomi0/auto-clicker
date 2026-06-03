@@ -1,0 +1,12 @@
+{
+  // ファイルを非表示
+  "files.exclude": {
+    "**/__pycache__": true,
+  },
+  // 余分な空白と改行の削除
+  "files.trimTrailingWhitespace": true,
+  "files.trimFinalNewlines": true,
+  "files.insertFinalNewline": true,
+  // 保存時の自動フォーマット
+  "editor.formatOnSave": true,
+}

@@ -1,0 +1,13 @@
+{
+  "ignorePaths": [
+    "poetry.lock",
+    ".gitignore"
+  ],
+  "words": [
+    "noconfirm",
+    "onefile",
+    "pyautogui",
+    "pyinstaller",
+    "pyproject"
+  ]
+}

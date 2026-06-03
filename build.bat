@@ -1,1 +1,1 @@
-pyinstaller --noconfirm --onefile --windowed --name auto-clicker src/main.py
+poetry run pyinstaller --noconfirm --onefile --windowed --name auto-clicker src/main.py
